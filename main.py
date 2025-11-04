@@ -146,8 +146,17 @@ def main():
     # Apply overrides to modify the schedule entries
     overridden_schedule = apply_overrides(base_schedule, parsed_overrides)
 
+    # Convert datetime objects to strings for JSON output
+    result = []
+    for entry in overridden_schedule:
+        result.append({
+            'user': entry['user'],
+            'start_at': format_date(entry['start_at']),
+            'end_at': format_date(entry['end_at'])
+        })
+    
     # Output the final schedule as JSON
-    print(json.dumps(overridden_schedule))
+    print(json.dumps(result))
     
 
 if __name__ == "__main__":
