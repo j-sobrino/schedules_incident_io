@@ -29,6 +29,27 @@ def format_date(dt):
         return iso_str[:-6] + 'Z'
     return iso_str
 
+def truncate_entries(entries, from_date, until_date):
+    truncated = []
+    for entry in entries:
+        entry_start = entry['start_at']
+        entry_end = entry['end_at']
+        
+        # skip entries completely outside the range
+        if entry_end <= from_date or entry_start >= until_date:
+            continue
+        
+        truncated_start = max(entry_start, from_date)
+        truncated_end = min(entry_end, until_date)
+        
+        truncated.append({
+            'user': entry['user'],
+            'start_at': truncated_start,
+            'end_at': truncated_end
+        })
+    
+    return truncated
+
 def generate_base_schedule(schedule, from_date, until_date):
     users = schedule['users']
     handover_start_at = parse_date(schedule['handover_start_at'])
@@ -61,26 +82,7 @@ def generate_base_schedule(schedule, from_date, until_date):
         
         current_handover = next_handover
     
-    # Truncate entries to fit within from_date and until_date range
-    truncated = []
-    for entry in schedule_entries:
-        entry_start = entry['start_at']
-        entry_end = entry['end_at']
-        
-        # skip entries completely outside the range
-        if entry_end <= from_date or entry_start >= until_date:
-            continue
-        
-        truncated_start = max(entry_start, from_date)
-        truncated_end = min(entry_end, until_date)
-        
-        truncated.append({
-            'user': entry['user'],
-            'start_at': truncated_start,
-            'end_at': truncated_end
-        })
-    
-    return truncated
+    return schedule_entries
 
 def apply_overrides(base_schedule, overrides):
     # Convert override dates to datetime objects
@@ -143,27 +145,23 @@ def parse_args():
 def main():
     args = parse_args()
 
-    print("Schedule file:", args.schedule)
-    print("Overrides file:", args.overrides)
-    print("From:", args.from_date)
-    print("Until:", args.until_date)
-
     # Load and parse the schedule JSON file
     parsed_schedule = parse_schedule(args.schedule)
-    print(parsed_schedule)
     # Load and parse the overrides JSON file
     parsed_overrides = parse_overrides(args.overrides)
-    print(parsed_overrides)
     # Parse the from and until date strings into datetime objects
     from_date = parse_date(args.from_date)
     until_date = parse_date(args.until_date)
-    print(from_date)
-    print(until_date)
+    
     # Generate base schedule entries from the schedule configuration
     base_schedule = generate_base_schedule(parsed_schedule, from_date, until_date)
-    print(base_schedule)
+    # Truncate base schedule
+    base_schedule = truncate_entries(base_schedule, from_date, until_date)
+    
     # Apply overrides to modify the schedule entries
     overridden_schedule = apply_overrides(base_schedule, parsed_overrides)
+    # Truncate again after overrides
+    overridden_schedule = truncate_entries(overridden_schedule, from_date, until_date)
 
     # Convert datetime objects to strings for JSON output
     result = []
