@@ -1,6 +1,6 @@
 import argparse
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def parse_schedule(schedule_file):
     with open(schedule_file, 'r') as f:
@@ -21,8 +21,47 @@ def parse_date(date_string):
     
     return datetime.fromisoformat(date_string)
 
+def format_date(dt):
+    # Format datetime to ISO 8601 with 'Z' suffix
+    iso_str = dt.isoformat()
+    # Replace +00:00 with Z for UTC
+    if iso_str.endswith('+00:00'):
+        return iso_str[:-6] + 'Z'
+    return iso_str
+
 def generate_base_schedule(schedule, from_date, until_date):
-    pass
+    users = schedule['users']
+    handover_start_at = parse_date(schedule['handover_start_at'])
+    handover_interval_days = schedule['handover_interval_days']
+    schedule_entries = []
+    
+    current_handover = handover_start_at
+    
+    # If from_date is after handover_start_at then calculate the current handover
+    if from_date > handover_start_at:
+        days_since_start = (from_date - handover_start_at).days
+        intervals_passed = days_since_start // handover_interval_days
+        current_handover = handover_start_at + timedelta(days=intervals_passed * handover_interval_days)
+        if current_handover > from_date:
+            current_handover -= timedelta(days=handover_interval_days)
+    
+    # generaate schedule entries until we reach the until date
+    while current_handover < until_date:
+        intervals_since_start = (current_handover - handover_start_at).days // handover_interval_days
+        user_index = intervals_since_start % len(users)
+        
+        next_handover = current_handover + timedelta(days=handover_interval_days)
+        
+        entry = {
+            'user': users[user_index],
+            'start_at': format_date(current_handover),
+            'end_at': format_date(next_handover)
+        }
+        schedule_entries.append(entry)
+        
+        current_handover = next_handover
+    
+    return schedule_entries
 
 def apply_overrides(base_schedule, overrides):
     pass
@@ -58,7 +97,7 @@ def main():
     print(until_date)
     # Generate base schedule entries from the schedule configuration
     base_schedule = generate_base_schedule(parsed_schedule, from_date, until_date)
-
+    print(base_schedule)
     # Apply overrides to modify the schedule entries
     overridden_schedule = apply_overrides(base_schedule, parsed_overrides)
 
