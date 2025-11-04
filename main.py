@@ -61,7 +61,26 @@ def generate_base_schedule(schedule, from_date, until_date):
         
         current_handover = next_handover
     
-    return schedule_entries
+    # Truncate entries to fit within from_date and until_date range
+    truncated = []
+    for entry in schedule_entries:
+        entry_start = entry['start_at']
+        entry_end = entry['end_at']
+        
+        # skip entries completely outside the range
+        if entry_end <= from_date or entry_start >= until_date:
+            continue
+        
+        truncated_start = max(entry_start, from_date)
+        truncated_end = min(entry_end, until_date)
+        
+        truncated.append({
+            'user': entry['user'],
+            'start_at': truncated_start,
+            'end_at': truncated_end
+        })
+    
+    return truncated
 
 def apply_overrides(base_schedule, overrides):
     # Convert override dates to datetime objects
