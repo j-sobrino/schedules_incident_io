@@ -54,8 +54,8 @@ def generate_base_schedule(schedule, from_date, until_date):
         
         entry = {
             'user': users[user_index],
-            'start_at': format_date(current_handover),
-            'end_at': format_date(next_handover)
+            'start_at': current_handover,
+            'end_at': next_handover
         }
         schedule_entries.append(entry)
         
