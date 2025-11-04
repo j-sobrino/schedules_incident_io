@@ -2,7 +2,10 @@ import argparse
 import json
 
 def parse_schedule(schedule_file):
-    pass
+    with open(schedule_file, 'r') as f:
+        schedule_data = json.load(f)
+    
+    return schedule_data
 
 def parse_overrides(overrides_file):
     pass
@@ -36,7 +39,7 @@ def main():
 
     # Load and parse the schedule JSON file
     parsed_schedule = parse_schedule(args.schedule)
-
+    print(parsed_schedule)
     # Load and parse the overrides JSON file
     parsed_overrides = parse_overrides(args.overrides)
 
