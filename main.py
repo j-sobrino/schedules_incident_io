@@ -64,7 +64,52 @@ def generate_base_schedule(schedule, from_date, until_date):
     return schedule_entries
 
 def apply_overrides(base_schedule, overrides):
-    pass
+    # Convert override dates to datetime objects
+    parsed_overrides = []
+    for override in overrides:
+        parsed_overrides.append({
+            'user': override['user'],
+            'start_at': parse_date(override['start_at']),
+            'end_at': parse_date(override['end_at'])
+        })
+    
+    # Process each override
+    schedule_entries = base_schedule
+    for override in parsed_overrides:
+        override_start = override['start_at']
+        override_end = override['end_at']
+        
+        new_entries = []
+        
+        for entry in schedule_entries:
+            entry_start = entry['start_at']
+            entry_end = entry['end_at']
+            
+            if entry_end <= override_start or entry_start >= override_end:
+                new_entries.append(entry)
+            else:
+                if entry_start < override_start:
+                    new_entries.append({
+                        'user': entry['user'],
+                        'start_at': entry_start,
+                        'end_at': override_start
+                    })
+                if entry_end > override_end:
+                    new_entries.append({
+                        'user': entry['user'],
+                        'start_at': override_end,
+                        'end_at': entry_end
+                    })
+        
+        new_entries.append({
+            'user': override['user'],
+            'start_at': override_start,
+            'end_at': override_end
+        })
+        
+        schedule_entries = sorted(new_entries, key=lambda x: x['start_at'])
+    
+    return schedule_entries
 
 
 def parse_args():
