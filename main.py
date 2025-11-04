@@ -1,5 +1,6 @@
 import argparse
 import json
+from datetime import datetime
 
 def parse_schedule(schedule_file):
     with open(schedule_file, 'r') as f:
@@ -14,7 +15,11 @@ def parse_overrides(overrides_file):
     return overrides_data
 
 def parse_date(date_string):
-    pass
+    # Replace 'Z' with '+00:00' for UTC timezone compatibility
+    if date_string.endswith('Z'):
+        date_string = date_string[:-1] + '+00:00'
+    
+    return datetime.fromisoformat(date_string)
 
 def generate_base_schedule(schedule, from_date, until_date):
     pass
@@ -49,7 +54,8 @@ def main():
     # Parse the from and until date strings into datetime objects
     from_date = parse_date(args.from_date)
     until_date = parse_date(args.until_date)
-
+    print(from_date)
+    print(until_date)
     # Generate base schedule entries from the schedule configuration
     base_schedule = generate_base_schedule(parsed_schedule, from_date, until_date)
 
