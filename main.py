@@ -8,7 +8,10 @@ def parse_schedule(schedule_file):
     return schedule_data
 
 def parse_overrides(overrides_file):
-    pass
+    with open(overrides_file, 'r') as f:
+        overrides_data = json.load(f)
+    
+    return overrides_data
 
 def parse_date(date_string):
     pass
@@ -42,7 +45,7 @@ def main():
     print(parsed_schedule)
     # Load and parse the overrides JSON file
     parsed_overrides = parse_overrides(args.overrides)
-
+    print(parsed_overrides)
     # Parse the from and until date strings into datetime objects
     from_date = parse_date(args.from_date)
     until_date = parse_date(args.until_date)
